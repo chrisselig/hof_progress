@@ -1,8 +1,7 @@
 # libraries
-
 library(dplyr)
 # library(baseballr)
-library(httr2)
+# library(httr2)
 library(purrr)
 library(janitor)
 library(rvest)
@@ -10,16 +9,9 @@ library(duckdb)
 # library(odbc)
 
 
-# Download data ----
+# 1.0 Download data ----
 
-#0.1 List of Hall of Famer Data ----
-raw <- rvest::read_html('https://en.wikipedia.org/wiki/List_of_members_of_the_Baseball_Hall_of_Fame') |> 
-    rvest::html_nodes('table') |> 
-    rvest::html_table() |>
-    (\(.) .[[3]])() |> 
-    janitor::clean_names()
-
-# 0.2 Baseball Computer Data ----
+# 1.1 Baseball Computer Data ----
 # This duckdb database comes from: https://baseball.computer/
 # Create a database file on disk
 con <- dbConnect(duckdb(), dbdir = "retro_baseball_stats.db")
@@ -45,27 +37,59 @@ dbExecute(con, "USE main_models")
 # Park factors contains park factors calculated using a batter-pitcher-matched-pair methodology (and a more standard aggregate methodology as a fallback for years with insufficient data).
 # park_factors 
 
-# Let's find season-level statistics for all pitchers and put it in a DataFrame
-player_career_pitching_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_pitching")
-player_career_offense_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_offense")
-player_career_fielding_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_fielding")
-
-# 0.3 Player Info and other Reference Data ----
+# 1.2 Player Info and other Reference Data ----
 # https://github.com/chadwickbureau/retrosheet/tree/official
 urls <- list(
-    'https://github.com/chadwickbureau/retrosheet/blob/40d79e757aa348f6e11303e8bd1d2a966bfe877f/reference/biofile.csv', # player bio
-    'https://github.com/chadwickbureau/retrosheet/blob/40d79e757aa348f6e11303e8bd1d2a966bfe877f/reference/coaches.csv', # coaches
-    'https://github.com/chadwickbureau/retrosheet/blob/40d79e757aa348f6e11303e8bd1d2a966bfe877f/reference/relatives.csv', # relatives
-    'https://github.com/chadwickbureau/retrosheet/blob/40d79e757aa348f6e11303e8bd1d2a966bfe877f/reference/teams.csv' # teams names
+    'https://raw.githubusercontent.com/chadwickbureau/retrosheet/official/reference/biofile.csv', # player bio
+    'https://raw.githubusercontent.com/chadwickbureau/retrosheet/official/reference/coaches.csv', # coaches
+    'https://raw.githubusercontent.com/chadwickbureau/retrosheet/official/reference/relatives.csv', # relatives
+    'https://raw.githubusercontent.com/chadwickbureau/retrosheet/official/reference/teams.csv' # teams names
     )
+
 
 urls |>
     purrr::map(
         \(x)  download.file(x, destfile = file.path("00_data/", basename(x)))
         )
 
-    
+# 2.0 Read In Data ----
+# 2.1 Season Level Stats ----
+player_career_pitching_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_pitching")
+player_career_offense_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_offense")
+player_career_fielding_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_fielding")
 
-# Get list of players from duckdb database
+# 2.2 Season Level Stats ----
+player_season_league_pitching_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_season_league_pitching")
+player_season_league_offense_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_season_league_offense")
+player_season_league_fielding_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_season_league_fielding")
+
+# 2.3 Retrosheet Reference Data ----
+
+reference_data_list <- urls |>
+    purrr::map(
+        \(x)  readr::read_csv(file.path("00_data/", basename(x)))
+        )
+player_bio_raw <- reference_data_list[[1]]
+coaches_raw <- reference_data_list[[2]]
+relatives_raw <- reference_data_list[[3]]
+teams_raw <- reference_data_list[[4]]
+
+# 3.0 Clean Data & Combine Data ----
+# 3.1 Clean Reference Data ----
+player_bio_tidy <- player_bio_raw |> 
+    janitor::clean_names()
+
+relatives_tidy <- relatives_raw |> 
+    janitor::clean_names()
+
+teams_tidy <- teams_raw |> 
+    janitor::clean_names()
 
 # Need to combine HOF data with player data to identify to get player ids
+
+# Remove Raw Data Files
+# get list of variables in environment that have _raw in the name
+#list = ls()
+
+#grep("_raw", ls())
+# [1] "coaches_raw"                "hof_list_raw"               "player_bio_raw"             "player_career_fielding_raw"
