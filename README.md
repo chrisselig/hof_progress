@@ -16,4 +16,4 @@ Initial data wrangling has been done by others and downloaded for this project. 
 
 1. [Baseball Computer](https://baseball.computer/)
 
-2, [Chadwick Baseball Bureau](https://github.com/chadwickbureau/retrosheet)
+2. [Chadwick Baseball Bureau](https://github.com/chadwickbureau/retrosheet)
