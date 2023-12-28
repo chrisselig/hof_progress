@@ -1,25 +1,14 @@
 # libraries
 
 library(dplyr)
-library(baseballr)
+# library(baseballr)
 library(httr2)
 library(purrr)
 library(janitor)
 library(rvest)
+library(duckdb)
+# library(odbc)
 
-# List of Data Sources
-urls <- list("https://www.retrosheet.org/gamelogs/gl1871_99.zip",
-          "https://www.retrosheet.org/gamelogs/gl1900_19.zip",
-          "https://www.retrosheet.org/gamelogs/gl1920_39.zip",
-          "https://www.retrosheet.org/gamelogs/gl1940_59.zip",
-          "https://www.retrosheet.org/gamelogs/gl1960_69.zip",
-          "https://www.retrosheet.org/gamelogs/gl1970_79.zip",
-          "https://www.retrosheet.org/gamelogs/gl1980_89.zip",
-          "https://www.retrosheet.org/gamelogs/gl1990_99.zip",
-          "https://www.retrosheet.org/gamelogs/gl2000_09.zip",
-          "https://www.retrosheet.org/gamelogs/gl2010_19.zip",
-          "https://www.retrosheet.org/gamelogs/gl2020_23.zip"
-          )
 
 # Download data
 
@@ -29,30 +18,35 @@ hof_list_raw <- rvest::read_html('https://en.wikipedia.org/wiki/List_of_members_
     (\(.) .[[3]])() |> 
     janitor::clean_names()
 
-urls |> 
-    purrr::map(
-        \(x)  download.file(x, destfile = file.path("00_data/", basename(x)))
-        )
 
-# Unzip data
-zipped_files <- list.files("00_data/", full.names = TRUE, pattern = "*.zip") 
+# This duckdb database comes from: https://baseball.computer/
+# Create a database file on disk
+con <- dbConnect(duckdb(), dbdir = "retro_baseball_stats.db")
 
-zipped_files |> 
-    purrr::map(
-        \(x) unzip(x, exdir = "00_data/")
-    )
+# Enable remote access
+dbExecute(con, "INSTALL httpfs")
+dbExecute(con, "LOAD httpfs")
+# This ATTACH command only needs to be run once on an existing database and will fail
+# if run twice, but you can safely ignore the error in that case
+dbExecute(con, "ATTACH 'https://data.baseball.computer/dbt/bc_remote.db' (READ_ONLY)")
+dbExecute(con, "USE bc_remote")
+dbExecute(con, "USE main_models")
 
-# Remove zipped files from 00_data directory
-file.remove(zipped_files)
+# Tables of interest
+# metrics_player_career_offense
+# metrics_player_career_pitching
+# metrics_player_career_fielding
 
-# Read in data
+# metrics_player_season_league_offense
+# metrics_player_season_league_pitching
+# metrics_player_season_league_fielding
 
-txt_files <- list.files("00_data/", full.names = TRUE, pattern = "*.txt")
 
-raw_data <- txt_files |>
-    map_dfr(
-        \(x) read.table(x, header = FALSE, sep = ",", skipNul = TRUE)
-        )
+# Let's find season-level statistics for all pitchers and put it in a DataFrame
+player_career_pitching_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_pitching")
+player_career_offense_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_offense")
+player_career_fielding_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_fielding")
 
-retrosheet::get_retrosheet("1898") 
+# Get list of players from duckdb database
 
+# Need to combine HOF data with player data to identify to get player ids
