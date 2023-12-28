@@ -4,6 +4,8 @@ library(dplyr)
 library(baseballr)
 library(httr2)
 library(purrr)
+library(janitor)
+library(rvest)
 
 # List of Data Sources
 urls <- list("https://www.retrosheet.org/gamelogs/gl1871_99.zip",
@@ -20,6 +22,13 @@ urls <- list("https://www.retrosheet.org/gamelogs/gl1871_99.zip",
           )
 
 # Download data
+
+rvest::read_html('https://en.wikipedia.org/wiki/List_of_members_of_the_Baseball_Hall_of_Fame') |> 
+    rvest::html_nodes('table') |> 
+    rvest::html_table() |>
+    (\(.) .[[3]])() |> 
+    janitor::clean_names()
+
 urls |> 
     purrr::map(
         \(x)  download.file(x, destfile = file.path("00_data/", basename(x)))
@@ -44,4 +53,6 @@ raw_data <- txt_files |>
     map_dfr(
         \(x) read.table(x, header = FALSE, sep = ",", skipNul = TRUE)
         )
+
+retrosheet::get_retrosheet("1898") 
 
