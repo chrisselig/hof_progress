@@ -1,6 +1,7 @@
 # Data
 *.zip
 *.txt
+*.csv
 
 # History files
 .Rhistory
