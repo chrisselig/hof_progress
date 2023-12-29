@@ -5,6 +5,7 @@ Dropdown to select player
 # Info to include
 Show stat comparisions to other HOFers
 Predict if person is destined for HOF. Show %
+Use clustering to find groups of hof players that are similar to selected player
 
 License info:
 
