@@ -40,6 +40,13 @@ urls |>
         \(x)  download.file(x, destfile = file.path("00_data/", basename(x)))
         )
 
+# 1.3 Fangraphs Data ----
+fg_url <- 'https://library.fangraphs.com/misc/war/'
+
+read_html(fg_url) |>
+    html_nodes("table") |>
+    html_table() |>
+    .[[1]]
 # 2.0 Read In Data ----
 
 # 2.1 Season Level Stats ----
@@ -213,7 +220,8 @@ teams_tidy <- teams_raw |>
     janitor::clean_names()
 
 # 3.2 Clean Career Level Stats ----
-# player_career_offense_raw |> 
+player_career_offense_raw |> 
+    
 
 # 6.0 ----
 # Remove Raw Data Files
