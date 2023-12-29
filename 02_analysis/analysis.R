@@ -46,7 +46,7 @@ urls |>
 #player_career_pitching_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_pitching")
 player_career_offense_raw <- dbGetQuery(
     con,
-    "SELECT * 
+    "SELECT 
         player_id,
         plate_appearances,
         at_bats,
@@ -113,12 +113,80 @@ player_career_offense_raw <- dbGetQuery(
     FROM metrics_player_career_offense"
     )
 
-player_career_fielding_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_fielding")
+# player_career_fielding_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_fielding")
 
 # 2.2 Season Level Stats ----
 #player_season_league_pitching_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_season_league_pitching")
-player_season_league_offense_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_season_league_offense")
-player_season_league_fielding_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_season_league_fielding")
+player_season_league_offense_raw <- dbGetQuery(
+    con, 
+    "SELECT
+        player_id,
+        plate_appearances,
+        at_bats,
+        hits,
+        singles,
+        doubles,
+        triples,
+        home_runs,
+        total_bases,
+        strikeouts,
+        walks,
+        intentional_walks,
+        hit_by_pitches,
+        sacrifice_hits,
+        sacrifice_flies,
+        reached_on_errors,
+        reached_on_interferences,
+        inside_the_park_home_runs,
+        infield_hits,
+        on_base_opportunities,
+        on_base_successes,
+        runs_batted_in,
+        grounded_into_double_plays,
+        batting_outs,
+        balls_in_play,
+        balls_batted,
+        bunts,
+        runs,
+        times_reached_base,
+        stolen_bases,
+        caught_stealing,
+        picked_off,
+        picked_off_caught_stealing,
+        outs_on_basepaths,
+        pitches,
+        swings,
+        swings_with_contact,
+        left_on_base,
+        left_on_base_with_two_outs,
+        batting_average,
+        on_base_percentage,
+        slugging_percentage,
+        on_base_plus_slugging,
+        isolated_power,
+        home_run_rate,
+        walk_rate,
+        strikeout_rate,
+        stolen_base_percentage,
+        fly_ball_rate,
+        line_drive_rate,
+        pop_up_rate,
+        ground_ball_rate,
+        coverage_weighted_air_ball_batting_average,
+        coverage_weighted_ground_ball_batting_average,
+        coverage_weighted_fly_ball_batting_average,
+        coverage_weighted_line_drive_batting_average,
+        coverage_weighted_pop_up_batting_average,
+        pulled_rate_outs,
+        pulled_rate_hits,
+        pulled_rate,
+        opposite_field_rate_outs,
+        opposite_field_rate_hits,
+        opposite_field_rate
+    FROM metrics_player_season_league_offense"
+    )
+
+# player_season_league_fielding_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_season_league_fielding")
 
 # 2.3 Retrosheet Reference Data ----
 
