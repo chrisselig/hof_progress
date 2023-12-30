@@ -1,7 +1,5 @@
-# libraries
+# 0.0 Libraries
 library(dplyr)
-# library(baseballr)
-# library(httr2)
 library(purrr)
 library(janitor)
 library(rvest)
@@ -9,7 +7,6 @@ library(duckdb)
 library(arrow)
 library(keyring)
 library(AzureStor)
-library(AzureAuth)
 
 
 # 1.0 Download data ----
@@ -218,18 +215,8 @@ relatives_tidy <- relatives_raw |>
 teams_tidy <- teams_raw |> 
     janitor::clean_names()
 
-# 3.2 Clean Career Level Stats ----
-# player_career_offense_raw |> 
-    
-# 9.0 Write Data for Shiny App to Azure ----
 
-upload_to_url("00_data_clean/player_bio.parquet",
-              "https://baseballdata.blob.core.windows.net/bronzebaseball/player_bio.parquet",
-              key=keyring::key_get("azure_storage_account_key")
-)
-
-
-# 9.1 Reference Data to parquet ----
+# 9.0 Reference Data to parquet ----
 arrow::write_parquet(player_bio_tidy, "00_data_clean/player_bio.parquet")
 # arrow::write_parquet(coaches_raw, "00_data_clean/coaches.parquet")
 arrow::write_parquet(relatives_tidy, "00_data_clean/relatives.parquet")
@@ -239,6 +226,22 @@ arrow::write_parquet(teams_tidy, "00_data_clean/teams.parquet")
 arrow::write_parquet(player_career_offense_raw, "00_data_clean/player_career_offense.parquet")
 # arrow::write_parquet(player_career_fielding_raw, "00_data_clean/player_career_fielding.parquet")
 # arrow::write_parquet(player_career_pitching_raw, "00_data_clean/player_career_pitching.parquet")
+
+# 9.3 Write Data for Shiny App to Azure ----
+
+upload_to_url("00_data_clean/player_bio.parquet",
+              "https://baseballdata.blob.core.windows.net/bronzebaseball/player_bio.parquet",
+              key=keyring::key_get("azure_storage_account_key")
+)
+
+list.files("00_data_clean") |>
+    purrr::map(
+        \(x) upload_to_url(
+            file.path("00_data_clean/", x),
+            paste0("https://baseballdata.blob.core.windows.net/bronzebaseball/", x),
+            key=keyring::key_get("azure_storage_account_key")
+        )
+    )
 
 # 99.0 ----
 # Remove Raw Data Files

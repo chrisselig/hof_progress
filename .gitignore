@@ -2,6 +2,7 @@
 *.zip
 *.txt
 *.csv
+*.parquet
 
 # History files
 .Rhistory
