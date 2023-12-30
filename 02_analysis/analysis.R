@@ -6,7 +6,10 @@ library(purrr)
 library(janitor)
 library(rvest)
 library(duckdb)
-# library(odbc)
+library(arrow)
+library(keyring)
+library(AzureStor)
+library(AzureAuth)
 
 
 # 1.0 Download data ----
@@ -37,16 +40,12 @@ urls <- list(
 
 urls |>
     purrr::map(
-        \(x)  download.file(x, destfile = file.path("00_data/", basename(x)))
+        \(x)  download.file(x, destfile = file.path("00_data_raw/", basename(x)))
         )
 
-# 1.3 Fangraphs Data ----
-fg_url <- 'https://library.fangraphs.com/misc/war/'
+# 1.3 Baseball Reference Data ----
+# This is daily data so needs a pipeline that runs daily
 
-read_html(fg_url) |>
-    html_nodes("table") |>
-    html_table() |>
-    .[[1]]
 # 2.0 Read In Data ----
 
 # 2.1 Season Level Stats ----
@@ -199,7 +198,7 @@ player_season_league_offense_raw <- dbGetQuery(
 
 reference_data_list <- urls |>
     purrr::map(
-        \(x)  readr::read_csv(file.path("00_data/", basename(x)))
+        \(x)  readr::read_csv(file.path("00_data_raw/", basename(x)))
         )
 
 player_bio_raw <- reference_data_list[[1]]
@@ -220,10 +219,28 @@ teams_tidy <- teams_raw |>
     janitor::clean_names()
 
 # 3.2 Clean Career Level Stats ----
-player_career_offense_raw |> 
+# player_career_offense_raw |> 
     
+# 9.0 Write Data for Shiny App to Azure ----
 
-# 6.0 ----
+upload_to_url("00_data_clean/player_bio.parquet",
+              "https://baseballdata.blob.core.windows.net/bronzebaseball/player_bio.parquet",
+              key=keyring::key_get("azure_storage_account_key")
+)
+
+
+# 9.1 Reference Data to parquet ----
+arrow::write_parquet(player_bio_tidy, "00_data_clean/player_bio.parquet")
+# arrow::write_parquet(coaches_raw, "00_data_clean/coaches.parquet")
+arrow::write_parquet(relatives_tidy, "00_data_clean/relatives.parquet")
+arrow::write_parquet(teams_tidy, "00_data_clean/teams.parquet")
+
+# 9.2 Career Level Stats to parquet ----
+arrow::write_parquet(player_career_offense_raw, "00_data_clean/player_career_offense.parquet")
+# arrow::write_parquet(player_career_fielding_raw, "00_data_clean/player_career_fielding.parquet")
+# arrow::write_parquet(player_career_pitching_raw, "00_data_clean/player_career_pitching.parquet")
+
+# 99.0 ----
 # Remove Raw Data Files
 # get list of variables in environment that have _raw in the name
 #list = ls()
