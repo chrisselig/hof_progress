@@ -229,11 +229,13 @@ arrow::write_parquet(player_career_offense_raw, "00_data_clean/player_career_off
 
 # 9.3 Write Data for Shiny App to Azure ----
 
+# Single file upload
 upload_to_url("00_data_clean/player_bio.parquet",
               "https://baseballdata.blob.core.windows.net/bronzebaseball/player_bio.parquet",
               key=keyring::key_get("azure_storage_account_key")
 )
 
+# Multiple file upload
 list.files("00_data_clean") |>
     purrr::map(
         \(x) upload_to_url(
