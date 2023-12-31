@@ -7,6 +7,7 @@ library(duckdb)
 library(arrow)
 library(keyring)
 library(AzureStor)
+library(DBI)
 
 
 # 1.0 Download data ----
@@ -244,6 +245,14 @@ list.files("00_data_clean") |>
             key=keyring::key_get("azure_storage_account_key")
         )
     )
+
+# 9.4 Load Data to Motherduck ----
+# Create database connection
+motherduck_con <- duckdb::dbConnect(duckdb(),paste0('md:baseball?motherduck_token=', keyring::key_get("motherduck_token")))
+
+
+# Write data to table
+dbWriteTable(motherduck_con, "relatives", relatives_tidy)
 
 # 99.0 ----
 # Remove Raw Data Files
