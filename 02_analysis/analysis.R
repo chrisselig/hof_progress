@@ -252,7 +252,7 @@ motherduck_con <- duckdb::dbConnect(duckdb(),paste0('md:baseball?motherduck_toke
 
 
 # Write data to table
-dbWriteTable(motherduck_con, "relatives", relatives_tidy)
+dbWriteTable(motherduck_con, "relatives", relatives_tidy,overwrite = TRUE)
 
 # 99.0 ----
 # Remove Raw Data Files
