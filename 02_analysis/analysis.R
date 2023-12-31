@@ -48,7 +48,7 @@ urls |>
 
 # 2.1 Season Level Stats ----
 #player_career_pitching_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_career_pitching")
-player_career_offense_raw <- dbGetQuery(
+player_career_offense <- dbGetQuery(
     con,
     "SELECT 
         player_id,
@@ -121,7 +121,7 @@ player_career_offense_raw <- dbGetQuery(
 
 # 2.2 Season Level Stats ----
 #player_season_league_pitching_raw <- dbGetQuery(con, "SELECT * FROM metrics_player_season_league_pitching")
-player_season_league_offense_raw <- dbGetQuery(
+player_season_offense <- dbGetQuery(
     con, 
     "SELECT
         player_id,
@@ -207,13 +207,13 @@ teams_raw <- reference_data_list[[4]]
 # 3.0 Clean Data & Combine Data ----
 
 # 3.1 Clean Reference Data ----
-player_bio_tidy <- player_bio_raw |> 
+player_bio <- player_bio_raw |> 
     janitor::clean_names()
 
-relatives_tidy <- relatives_raw |> 
+relatives <- relatives_raw |> 
     janitor::clean_names()
 
-teams_tidy <- teams_raw |> 
+teams <- teams_raw |> 
     janitor::clean_names()
 
 
@@ -253,6 +253,12 @@ motherduck_con <- duckdb::dbConnect(duckdb(),paste0('md:baseball?motherduck_toke
 
 # Write data to table
 dbWriteTable(motherduck_con, "relatives", relatives_tidy,overwrite = TRUE)
+dbWriteTable(motherduck_con, "player_bio", player_bio,overwrite = TRUE)
+dbWriteTable(motherduck_con, "teams", teams_tidy,overwrite = TRUE)
+dbWriteTable(motherduck_con, "player_career_offense", player_career_offense,overwrite = TRUE)
+dbWriteTable(motherduck_con, "player_season_offense", player_season_offense,overwrite = TRUE)
+
+duckdb::dbDisconnect(motherduck_con)
 
 # 99.0 ----
 # Remove Raw Data Files
