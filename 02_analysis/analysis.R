@@ -208,7 +208,8 @@ teams_raw <- reference_data_list[[4]]
 
 # 3.1 Clean Reference Data ----
 player_bio <- player_bio_raw |> 
-    janitor::clean_names()
+    janitor::clean_names() |> 
+    rename(player_id = playerid)
 
 relatives <- relatives_raw |> 
     janitor::clean_names()
