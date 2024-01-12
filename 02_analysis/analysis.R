@@ -248,6 +248,13 @@ chadwickbureau_player_reference_raw <- list.files("00_data_raw/", pattern = "peo
         dplyr::bind_rows
         )
 
+player_key <- chadwickbureau_player_reference_raw |> 
+    filter(is.na(key_sr_nfl)) |>
+    filter(is.na(key_sr_nba)) |> 
+    filter(is.na(key_sr_nhl)) |> 
+    select(key_retro, key_fangraphs, name_last,name_first,name_given,name_suffix,name_nick) |> 
+    mutate(name = paste(name_first, name_last, sep = " "))
+
 # 3.0 Clean Data & Combine Data ----
 
 # 3.1 Clean Reference Data ----
@@ -263,70 +270,14 @@ teams <- teams_raw |>
 
 # 3.2 Clean Fangraph fWAR Data ----
 fg_war <- fg_war_raw |> 
-    janitor::clean_names()
-    # 
-# fg_names <- fg_war |> 
-#     select(name)
-# 
-# player_bio_names <- player_bio |> 
-#     select(player_id, first, last, nickname) |> 
-#     mutate(name = paste(nickname, last, sep = " ")) #|> 
-#     # select(-first, -last)
-# 
-# matched_names <- fg_names |> 
-#     inner_join(player_bio_names, by = "name") |> 
-#     select(name, player_id)
-# 
-# unmatched_names <- fg_names |> 
-#     anti_join(player_bio_names, by = "name") |> 
-#     select(name) |>
-#     distinct(name)
-# 
-# fuzzy_matched_names <- unmatched_names |> 
-#     mutate(
-#         player_id = stringdist::amatch(name, player_bio_names$name, maxDist = 3),
-#         player_id = as.character(player_id)
-#     )
-# 
-# # Remove suffix to match
-# split_suffix_match_test <- fuzzy_matched_names |>
-#     filter(is.na(player_id)) |> 
-#     # remove rows with (Unknown) in name
-#     filter(!grepl("(Unknown)", name)) |> 
-#     # Create new column that finds Sr. or Jr. in name column. Remove from name column and add to "suffix" column
-#     mutate(
-#         suffix = stringr::str_extract(name, "(Sr.|Jr.)"),
-#         name = stringr::str_remove(name, "(Sr.|Jr.)")
-#     ) |> 
-#     mutate(
-#         player_id = stringdist::amatch(name, player_bio_names$name, maxDist = 3)    
-#     )
-#     
-# suffix_match <- split_suffix_match_test |> 
-#     filter(!is.na(player_id)) |> 
-#     select(name, suffix, player_id) |> 
-#     mutate(
-#         name = paste(name, suffix, sep = " "),
-#         player_id = as.character(player_id)
-#     )
-# 
-# unmatched_names <- split_suffix_match_test |> 
-#     filter(is.na(player_id))
-# 
-# 
-# 
-# # Combine all player_id tables together
-# player_id_matched_names <- matched_names |>
-#     bind_rows(fuzzy_matched_names) |>
-#     bind_rows(suffix_match) |> 
-#     select(-suffix) |> 
-#     distinct(name,player_id)
-    
-# Combine updates names with fg_war
-fg_war |>
-    left_join(player_id_matched_names, by = "name") |> View()
-    # inner_join(player_bio_names, by = "player_id") |> 
-    # select(name, player_id)
+    janitor::clean_names() |> 
+    filter(!is.na(name)) |> 
+    left_join(player_key, by = c("name" = "name"))
+
+# Fix duplicates
+fg_war <- fg_war |>
+    filter(!(name == "John McMullin" & name_given =='John'))
+
 
 # 9.0 Reference Data to parquet ----
 arrow::write_parquet(player_bio, "00_data_clean/player_bio.parquet")
@@ -368,6 +319,7 @@ dbWriteTable(motherduck_con, "player_bio", player_bio,overwrite = TRUE)
 dbWriteTable(motherduck_con, "teams", teams,overwrite = TRUE)
 dbWriteTable(motherduck_con, "player_career_offense", player_career_offense,overwrite = TRUE)
 dbWriteTable(motherduck_con, "player_season_offense", player_season_offense,overwrite = TRUE)
+dbWriteTable(motherduck_con, "fg_war", fg_war,overwrite = TRUE)
 
 duckdb::dbDisconnect(motherduck_con)
 
