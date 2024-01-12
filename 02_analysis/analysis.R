@@ -42,6 +42,8 @@ urls |>
         )
 
 # 1.3 Download Player Ids ----
+# https://github.com/chadwickbureau/register
+# This data updates weekly
 
 # Create function that doesn't error out if the file doesn't exist
 
@@ -319,7 +321,8 @@ dbWriteTable(motherduck_con, "player_bio", player_bio,overwrite = TRUE)
 dbWriteTable(motherduck_con, "teams", teams,overwrite = TRUE)
 dbWriteTable(motherduck_con, "player_career_offense", player_career_offense,overwrite = TRUE)
 dbWriteTable(motherduck_con, "player_season_offense", player_season_offense,overwrite = TRUE)
-dbWriteTable(motherduck_con, "fg_war", fg_war,overwrite = TRUE)
+dbWriteTable(motherduck_con, "fg_war", fg_war, overwrite = TRUE)
+dbWriteTable(motherduck_con, "player_id_ref", player_key, overwrite = TRUE)
 
 duckdb::dbDisconnect(motherduck_con)
 
