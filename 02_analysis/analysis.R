@@ -280,6 +280,15 @@ fg_war <- fg_war_raw |>
 fg_war <- fg_war |>
     filter(!(name == "John McMullin" & name_given =='John'))
 
+# 4.0 Combine Data to Gold Tables ----
+player_career_offense <- player_career_offense |> 
+    inner_join(player_key, by = c("player_id" = 'key_retro')) |> 
+    select(-c(key_fangraphs, name_first, name_last, name_given, name_suffix, name_nick))
+
+player_season_offense <- player_season_offense |> 
+    inner_join(player_key, by = c("player_id" = 'key_retro')) |> 
+    select(-c(key_fangraphs, name_first, name_last, name_given, name_suffix, name_nick))
+
 
 # 9.0 Reference Data to parquet ----
 arrow::write_parquet(player_bio, "00_data_clean/player_bio.parquet")
