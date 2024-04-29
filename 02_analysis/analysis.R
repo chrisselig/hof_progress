@@ -72,6 +72,14 @@ paste0('https://raw.githubusercontent.com/chadwickbureau/register/master/data/pe
 # 1.4 Baseball Reference Data ----
 # This is daily data so needs a pipeline that runs daily
 
+# 1.5 HOF List
+# Download the table from the website https://en.wikipedia.org/wiki/List_of_members_of_the_Baseball_Hall_of_Fame
+hof_tables <- rvest::read_html("https://en.wikipedia.org/wiki/List_of_members_of_the_Baseball_Hall_of_Fame") %>%
+    rvest::html_table() 
+
+hof_list <- hof_tables[3] |>
+    as.data.frame() |> 
+    janitor::clean_names()
 
 
 # 2.0 Read In Data ----
@@ -303,21 +311,21 @@ arrow::write_parquet(player_career_offense, "00_data_clean/player_career_offense
 
 # 9.3 Write Data for Shiny App to Azure ----
 
-# Single file upload
-upload_to_url("00_data_clean/player_bio.parquet",
-              "https://baseballdata.blob.core.windows.net/bronzebaseball/player_bio.parquet",
-              key=keyring::key_get("azure_storage_account_key")
-)
-
-# Multiple file upload
-list.files("00_data_clean") |>
-    purrr::map(
-        \(x) upload_to_url(
-            file.path("00_data_clean/", x),
-            paste0("https://baseballdata.blob.core.windows.net/bronzebaseball/", x),
-            key=keyring::key_get("azure_storage_account_key")
-        )
-    )
+# # Single file upload
+# upload_to_url("00_data_clean/player_bio.parquet",
+#               "https://baseballdata.blob.core.windows.net/bronzebaseball/player_bio.parquet",
+#               key=keyring::key_get("azure_storage_account_key")
+# )
+# 
+# # Multiple file upload
+# list.files("00_data_clean") |>
+#     purrr::map(
+#         \(x) upload_to_url(
+#             file.path("00_data_clean/", x),
+#             paste0("https://baseballdata.blob.core.windows.net/bronzebaseball/", x),
+#             key=keyring::key_get("azure_storage_account_key")
+#         )
+#     )
 
 # 9.4 Load Data to Motherduck ----
 # Create database connection
